@@ -1,8 +1,8 @@
-import type { NextAuthConfig } from 'next-auth';
-import Credential from 'next-auth/providers/credentials'
+  import type { NextAuthConfig } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials'
+import { getUser } from '@/app/auth'
 
 export const authConfig = {
-  trustHost: true,
   pages: {
     signIn: '/login',
   },
@@ -19,6 +19,23 @@ export const authConfig = {
       return true;
     },
   },
+  session: {
+    strategy: 'jwt'
+  },
   secret: process.env.AUTH_SECRET,
-  providers: [Credential], // Add providers with an empty array for now
+  providers: [CredentialsProvider({
+    async authorize(credentials) :Promise<any> {
+      if (credentials.user === null) return null;
+      try {
+        const user = await getUser(credentials?.email);
+        if (user) {
+          return user;
+        } else {
+          throw new Error('user not found')
+        }
+      } catch (error) {
+        
+      }
+    }
+  })], // Add providers with an empty array for now
 } satisfies NextAuthConfig;
